@@ -1,7 +1,15 @@
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from .models import Category, Product
+from .models import (
+    Category,
+    Product,
+    Cart,
+    CartItem,
+    Order,
+    OrderItem,
+    Payment,
+)
 
 
 class SignupSerializer(serializers.ModelSerializer):
@@ -117,3 +125,159 @@ class ProductSerializer(serializers.ModelSerializer):
             "created_at",
         ]
         read_only_fields = ["id", "created_at"]
+
+class CartItemSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source="product.name", read_only=True)
+    product_price = serializers.DecimalField(
+        source="product.price",
+        max_digits=10,
+        decimal_places=2,
+        read_only=True
+    )
+    subtotal = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CartItem
+        fields = [
+            "id",
+            "product",
+            "product_name",
+            "product_price",
+            "quantity",
+            "price_at_add",
+            "subtotal",
+        ]
+        read_only_fields = [
+            "price_at_add",
+            "product_name",
+            "product_price",
+            "subtotal",
+        ]
+
+    def get_subtotal(self, obj):
+        return obj.quantity * obj.price_at_add
+
+class CartSerializer(serializers.ModelSerializer):
+    items = CartItemSerializer(many=True, read_only=True)
+    total_items = serializers.SerializerMethodField()
+    total_amount = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Cart
+        fields = [
+            "id",
+            "items",
+            "total_items",
+            "total_amount",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "items",
+            "total_items",
+            "total_amount",
+            "created_at",
+            "updated_at",
+        ]
+
+    def get_total_items(self, obj):
+        return sum(item.quantity for item in obj.items.all())
+
+    def get_total_amount(self, obj):
+        return sum(
+            item.quantity * item.price_at_add
+            for item in obj.items.all()
+        )
+
+
+class OrderItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderItem
+        fields = [
+            "id",
+            "product",
+            "product_name",
+            "price",
+            "quantity",
+        ]
+        read_only_fields = [
+            "id",
+            "product",
+            "product_name",
+            "price",
+        ]
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    items = OrderItemSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Order
+        fields = [
+            "id",
+            "order_number",
+            "items",
+            "total_amount",
+            "delivery_fee",
+            "payment_method",
+            "payment_status",
+            "order_status",
+            "shipping_name",
+            "shipping_phone",
+            "shipping_address",
+            "city",
+            "estimated_delivery_date",
+            "created_at",
+            "updated_at",
+
+        ]
+
+        read_only_fields = [
+            "id",
+            "order_number",
+            "items",
+            "total_amount",
+            "delivery_fee",
+            "payment_status",
+            "order_status",
+            "estimated_delivery_date",
+            "created_at",
+            "updated_at",
+        ]
+
+
+class PaymentSerializer(serializers.ModelSerializer):
+
+    order_number = serializers.CharField(
+        source="order.order_number",
+        read_only=True
+    )
+
+    class Meta:
+        model = Payment
+        fields = [
+            "id",
+            "order",
+            "order_number",
+            "payment_method",
+            "amount",
+            "transaction_reference",
+            "payment_status",
+            "payment_proof",
+            "verified_at",
+            "created_at",
+            "updated_at",
+        ]
+
+        read_only_fields = [
+            "id",
+            "order",
+            "order_number",
+            "amount",
+            "payment_method",
+            "payment_status",
+            "verified_at",
+            "created_at",
+            "updated_at",
+        ]

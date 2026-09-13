@@ -1,12 +1,30 @@
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenRefreshView
 from rest_framework.routers import DefaultRouter
-
 from .views import (
     SignupAPIView,
     LoginAPIView,
     CategoryViewSet,
-    ProductViewSet
+    ProductViewSet,
+    MyOrdersView,
+    OrderDetailView,
+    CheckoutView,
+)
+
+from .views import (
+    CartView,
+    CartItemCreateView,
+    CartItemUpdateView,
+    CartItemDeleteView,
+)
+
+from .views import (
+    PaymentCreateView,
+    PaymentDetailView,
+    OrderStatusUpdateView,
+    OrderCancelView,
+    BankDetailsView,
+    GlobalSearchView,
 )
 
 
@@ -47,5 +65,71 @@ urlpatterns = [
     path(
         "",
         include(router.urls)
+    ),
+    path("cart/", CartView.as_view(), name="cart"),
+    path(
+        "cart/items/",
+        CartItemCreateView.as_view(),
+        name="cart-item-create"
+    ),
+    path(
+        "cart/items/<int:pk>/",
+        CartItemUpdateView.as_view(),
+        name="cart-item-update"
+    ),
+    path(
+        "cart/items/<int:pk>/delete/",
+        CartItemDeleteView.as_view(),
+        name="cart-item-delete"
+    ),
+    path(
+        "orders/checkout/",
+        CheckoutView.as_view(),
+        name="checkout"
+    ),
+    path(
+        "orders/",
+        MyOrdersView.as_view(),
+        name="my-orders"
+    ),
+
+    path(
+        "orders/<int:order_id>/",
+        OrderDetailView.as_view(),
+        name="order-detail"
+    ),
+    path(
+        "payments/",
+        PaymentCreateView.as_view(),
+        name="payment-create"
+    ),
+    path(
+        "payments/bank-details/",
+        BankDetailsView.as_view(),
+        name="bank-details"
+    ),
+
+    path(
+        "payments/<int:order_id>/",
+        PaymentDetailView.as_view(),
+        name="payment-detail"
+    ),
+
+    path(
+        "orders/<int:order_id>/status/",
+        OrderStatusUpdateView.as_view(),
+        name="order-status-update"
+    ),
+
+    path(
+        "orders/<int:order_id>/cancel/",
+        OrderCancelView.as_view(),
+        name="order-cancel"
+    ),
+
+    path(
+        "search/",
+        GlobalSearchView.as_view(),
+        name="global-search"
     ),
 ]
